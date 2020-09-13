@@ -1,18 +1,24 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Reset } from "styled-reset";
-import { shuffleArray, pickRandomFromArray, getRandomNumber } from "./helpers";
+import { pickRandomFromArray, getRandomNumber } from "./helpers";
 import {
   Choices,
   Container,
   FLagIcon,
   Footer,
-  Logo,  
+  Logo,
   Next,
   NextWrapper,
   Question,
   Quiz,
   QuizWrapper,
   Title,
+  TryAgain,
+  WinningImage,
+  ResultTitle,
+  ResultContent,
+  Points,
+  Icon,
 } from "./App.css";
 
 const App = () => {
@@ -20,11 +26,16 @@ const App = () => {
   const [showAnswer, setShowAnswer] = useState(false);
   const [countrys, setCountrys] = useState([]);
   const [answerIndex, setAnswerIndex] = useState(0);
-  const [isCapitalQuestion, setIsCapitalQuestion] = useState();
+  const [question, setQuestion] = useState();
   const [clickedItem, setClickedItem] = useState();
+  const [showResult, setShowResult] = useState(false);
+  const [result, setResult] = useState(0);
 
   const generateQuestion = useCallback(() => {
-    let randomCountrys = shuffleArray(pickRandomFromArray(countrys, 4));
+    let randomCountrys = pickRandomFromArray(countrys, 4);
+    setQuestion(getRandomNumber(3));
+    setClickedItem()
+    setShowAnswer(false);
     setChoices(randomCountrys);
     setAnswerIndex(getRandomNumber(randomCountrys.length));
   }, [countrys]);
@@ -34,14 +45,18 @@ const App = () => {
       .then((response) => response.json())
       .then((data) => {
         let countrys = [];
-        countrys = data.map((country) => {
-          if (!country.capital) return false;
-          return {
-            name: country.name,
-            capital: country.capital,
-            countryCode: country.alpha2Code,
-          };
-        });
+        countrys = data
+          .map((country) => {
+            if (!country.capital) {
+              return false;
+            }
+            return {
+              name: country.name,
+              capital: country.capital,
+              countryCode: country.alpha2Code,
+            };
+          })
+          .filter((country) => country);
         setCountrys(countrys);
       });
   }, []);
@@ -52,18 +67,31 @@ const App = () => {
     }
   }, [countrys, generateQuestion]);
 
-  const handleChoiceClick = (index) => ()=> {
+  const handleChoiceClick = (index) => () => {
+    if (clickedItem >= 0) return;
+    if (index === answerIndex) setResult((prev) => prev + 1);
     setClickedItem(index);
     setShowAnswer(true);
   };
 
-  const renderQuestion = useMemo(() => {
-    const randomizeQuestion = getRandomNumber(3);
-    setIsCapitalQuestion(randomizeQuestion === 2 ? true : false);
-    let element = null;
+  const handleNextClick = () => {
+    if (clickedItem !== answerIndex) {
+      setShowResult(true);
+      return;
+    }
+    generateQuestion();
+  };
 
+  const handleTryAgainClick = () => {
+    setResult(0);
+    setShowResult(false);
+    generateQuestion()
+  };
+
+  const renderQuestion = useMemo(() => {
+    let element = null;
     if (choices.length) {
-      switch (randomizeQuestion) {
+      switch (question) {
         case 0:
           element = (
             <Question>{`${choices[answerIndex].capital} is capital of`}</Question>
@@ -93,7 +121,7 @@ const App = () => {
     }
 
     return element;
-  }, [answerIndex, choices]);
+  }, [choices, question, answerIndex]);
 
   return (
     <>
@@ -101,22 +129,52 @@ const App = () => {
       <Container>
         <QuizWrapper>
           <Title>Country Quiz</Title>
-          <Quiz buttonVisible={showAnswer}>
-            <Logo src="images/undraw_adventure.svg"/>
-            {renderQuestion}
-            {choices.length
-              ? choices.map(({ name, capital }, index) => (
-                  <Choices onClick={handleChoiceClick(index)} key={index}>
-                    {console.log(isCapitalQuestion)}
-                    {isCapitalQuestion ? name : capital}
-                  </Choices>
-                ))
-              : null}
-            <NextWrapper>
-              <Next isVisible={showAnswer}>
-                <span>Next</span>
-              </Next>
-            </NextWrapper>
+          <Quiz showResult={showResult}>
+            {!showResult ? (
+              <>
+                <Logo src="images/undraw_adventure.svg" />
+                {renderQuestion}
+                {choices.length
+                  ? choices.map(({ name, capital }, index) => (
+                      <Choices
+                        onClick={handleChoiceClick(index)}
+                        key={index}
+                        correct={clickedItem >= 0 && index === answerIndex}
+                        wrong={clickedItem === index && index !== answerIndex}
+                      >
+                        {question === 2 ? name : capital}
+                        <Icon
+                          className="material-icons"
+                          isVisible={
+                            clickedItem === index ||
+                            (clickedItem >= 0 && index === answerIndex)
+                          }
+                        >
+                          {index === answerIndex
+                            ? `check_circle_outline`
+                            : `cancel`}
+                        </Icon>
+                      </Choices>
+                    ))
+                  : null}
+                <NextWrapper>
+                  <Next isVisible={showAnswer} onClick={handleNextClick}>
+                    <span>Next</span>
+                  </Next>
+                </NextWrapper>
+              </>
+            ) : (
+              <>
+                <WinningImage src="images/undraw_winners.svg" />
+                <ResultTitle>Result</ResultTitle>
+                <ResultContent>
+                  {`You got `}
+                  <Points>{result}</Points>
+                  {` correct answers`}
+                </ResultContent>
+                <TryAgain onClick={handleTryAgainClick}>Try Again</TryAgain>
+              </>
+            )}
           </Quiz>
         </QuizWrapper>
         <Footer>Branislav Totic @ DevChallenges.io</Footer>
