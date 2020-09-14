@@ -99,7 +99,7 @@ const App = () => {
           break;
         case 1:
           element = (
-            <Question>{`${choices[answerIndex].name} capital city is`}</Question>
+            <Question>{`${choices[answerIndex].name}'s capital city is`}</Question>
           );
           break;
         case 2:
@@ -136,13 +136,13 @@ const App = () => {
                 {renderQuestion}
                 {choices.length
                   ? choices.map(({ name, capital }, index) => (
-                      <Choices
-                        onClick={handleChoiceClick(index)}
-                        key={index}
-                        correct={clickedItem >= 0 && index === answerIndex}
-                        wrong={clickedItem === index && index !== answerIndex}
-                      >
-                        {question === 2 ? name : capital}
+                    <Choices
+                    onClick={handleChoiceClick(index)}
+                    key={index}
+                    correct={clickedItem >= 0 && index === answerIndex}
+                    wrong={clickedItem === index && index !== answerIndex}
+                    >
+                        {question === 1 ? capital : name}
                         <Icon
                           className="material-icons"
                           isVisible={
