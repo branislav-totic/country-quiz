@@ -139,7 +139,9 @@ export const Next = styled.div`
     `}
 `;
 
-export const FLagIcon = styled.img``;
+export const FLagIcon = styled.span`
+  font-size: 60px;
+`;
 
 export const Logo = styled.img`
   position: absolute;

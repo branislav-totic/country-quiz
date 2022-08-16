@@ -41,7 +41,7 @@ const App = () => {
   }, [countrys]);
 
   useEffect(() => {
-    fetch(`https://restcountries.eu/rest/v2/all`)
+    fetch(`https://restcountries.com/v3.1/all`)
       .then((response) => response.json())
       .then((data) => {
         let countrys = [];
@@ -51,9 +51,9 @@ const App = () => {
               return false;
             }
             return {
-              name: country.name,
-              capital: country.capital,
-              countryCode: country.alpha2Code,
+              name: country.name.common,
+              capital: country.capital[0],
+              flag: country.flag,
             };
           })
           .filter((country) => country);
@@ -105,12 +105,7 @@ const App = () => {
         case 2:
           element = (
             <>
-              <FLagIcon
-                src={`https://www.countryflags.io/${choices[
-                  answerIndex
-                ].countryCode.toLowerCase()}/shiny/64.png`}
-                alt={choices[answerIndex].name}
-              />
+             <FLagIcon>{choices[answerIndex].flag}</FLagIcon> 
               <Question>Which country this flag belog to?</Question>
             </>
           );
